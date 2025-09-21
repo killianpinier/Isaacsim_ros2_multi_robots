@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+    <xacro:arg name="initial_positions_file" default="config/initial_positions.yaml" />
+    <xacro:arg name="ros2_control_hardware_type" default="mock_components" />
+
+    <xacro:arg name="joint_commands_topic_name" default="isaac_joint_commands" />
+    <xacro:arg name="joint_states_topic_name" default="isaac_joint_states" />
+
+    <!-- Import panda urdf file -->
+    <xacro:include filename="$(find panda_description)/urdf/mech/panda.urdf.xacro" />
+
+    <!-- Import panda ros2_control description -->
+    <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+    <xacro:include filename="$(find panda_description)/urdf/control/panda_hand.ros2_control.xacro" />
+
+    <xacro:panda_ros2_control name="PandaFakeSystem" 
+                                initial_positions_file="$(arg initial_positions_file)" 
+                                ros2_control_hardware_type="$(arg ros2_control_hardware_type)"
+                                joint_commands_topic_name="$(arg joint_commands_topic_name)"
+                                joint_states_topic_name="$(arg joint_states_topic_name)"
+    />
+    <xacro:panda_hand_ros2_control name="PandaHandFakeSystem" 
+                                    ros2_control_hardware_type="$(arg ros2_control_hardware_type)"
+                                    joint_commands_topic_name="$(arg joint_commands_topic_name)"
+                                    joint_states_topic_name="$(arg joint_states_topic_name)"
+    />
+</robot>
