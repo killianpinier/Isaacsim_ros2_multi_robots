@@ -25,14 +25,6 @@ from launch.event_handlers import OnProcessStart
 
 
 def generate_launch_description():
-
-    # ros2_control using FakeSystem as hardware
-    ros2_controllers_path = os.path.join(
-        get_package_share_directory("panda_bringup"),
-        "config",
-        "ros2_controllers.yaml",
-    )
-
     # Declare use_sim_time argument
     decleare_use_sim_time = DeclareLaunchArgument(
         "use_sim_time",
@@ -46,8 +38,21 @@ def generate_launch_description():
         description="The namespace of the robot",
     )
 
-    use_sim_time    = LaunchConfiguration("use_sim_time")
-    namespace       = LaunchConfiguration('namespace')
+    declare_ctrl_file_name = DeclareLaunchArgument(
+        "controllers_file_name",
+        default_value="ros2_controllers.yaml",
+        description="The filename for the robot's controller",
+    )
+
+    use_sim_time                = LaunchConfiguration("use_sim_time")
+    namespace                   = LaunchConfiguration('namespace')
+    controllers_file_name       = LaunchConfiguration('controllers_file_name')
+
+    ros2_controllers_path = os.path.join(
+        get_package_share_directory("panda_bringup"),
+        "config",
+        controllers_file_name,
+    )
 
     ros2_control_node = Node(
         package="controller_manager",
@@ -105,6 +110,7 @@ def generate_launch_description():
         [
             decleare_use_sim_time,
             declare_namespace,
+            declare_ctrl_file_name,
             # ros2_control_node,
             # joint_state_broadcaster_spawner,
             # panda_arm_controller_spawner,

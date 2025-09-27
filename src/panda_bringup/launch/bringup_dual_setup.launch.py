@@ -31,7 +31,7 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'namespace': "panda2"
+            'namespace': "panda1"
 
         }.items(),
     )
@@ -45,7 +45,7 @@ def generate_launch_description():
             'jsp_gui': 'false',
             'use_rviz': 'false',
             'use_sim_time': use_sim_time,
-            'namespace': "panda2",
+            'namespace': "panda1",
             'x': 0.0,
             'y': 0.0,
             'z': 0.0,
@@ -55,23 +55,23 @@ def generate_launch_description():
         }.items(),
     )
 
-    panda2_robot_state_publisher = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            os.path.join(pkg_share_description, 'launch', 'robot_state_publisher.launch.py')
-        ]),
-        launch_arguments={
-            'jsp_gui': 'false',
-            'use_rviz': 'false',
-            'use_sim_time': use_sim_time,
-            'namespace': "panda2",
-            'x': 0.0,
-            'y': 0.8,
-            'z': 0.0,
-            # 'joint_commands_topic_name': '/panda1/isaac_joint_commands',
-            # 'joint_states_topic_name': '/panda1/isaac_joint_states'
+    # panda2_robot_state_publisher = IncludeLaunchDescription(
+    #     PythonLaunchDescriptionSource([
+    #         os.path.join(pkg_share_description, 'launch', 'robot_state_publisher.launch.py')
+    #     ]),
+    #     launch_arguments={
+    #         'jsp_gui': 'false',
+    #         'use_rviz': 'false',
+    #         'use_sim_time': use_sim_time,
+    #         'namespace': "panda2",
+    #         'x': 0.0,
+    #         'y': 0.8,
+    #         'z': 0.0,
+    #         # 'joint_commands_topic_name': '/panda1/isaac_joint_commands',
+    #         # 'joint_states_topic_name': '/panda1/isaac_joint_states'
 
-        }.items(),
-    )
+    #     }.items(),
+    # )
 
     load_controllers_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -79,7 +79,7 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'namespace': "panda2"
+            'namespace': "panda1"
         }.items(),
     )
 
@@ -88,6 +88,6 @@ def generate_launch_description():
 
         move_group,
         panda1_robot_state_publisher,
-        panda2_robot_state_publisher,
+        # panda2_robot_state_publisher,
         load_controllers_cmd
     ])

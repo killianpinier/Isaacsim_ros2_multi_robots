@@ -14,7 +14,7 @@ from pathlib import Path
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
@@ -52,7 +52,7 @@ def generate_launch_description():
     rviz_config_file                    = LaunchConfiguration('rviz_config_file')
 
     # robot_name                          = LaunchConfiguration('robot_name')
-    # prefix                              = LaunchConfiguration('prefix')
+    prefix                              = LaunchConfiguration('prefix')
     namespace                           = LaunchConfiguration('namespace')
     x                                   = LaunchConfiguration('x')
     y                                   = LaunchConfiguration('y')
@@ -71,14 +71,15 @@ def generate_launch_description():
     declare_rviz_config_file_cmd        = DeclareLaunchArgument(name='rviz_config_file', default_value=default_rviz_config_path, description='Full path to the RVIZ config file to use')
 
     declare_namespace                   = DeclareLaunchArgument('namespace', default_value='', description='Namespace')
+    declare_prefix                      = DeclareLaunchArgument('prefix', default_value='', description='Prefix for robot joints and links')
     declare_joint_commands_topic_name   = DeclareLaunchArgument('joint_commands_topic_name', default_value='isaac_joint_commands', description='Joint_commands_topic_name')
     declare_joint_states_topic_name     = DeclareLaunchArgument('joint_states_topic_name', default_value='isaac_joint_states', description='Joint_states_topic_name')
     declare_x                           = DeclareLaunchArgument('x', default_value='0.0')
-    declare_y                           = DeclareLaunchArgument('x', default_value='0.0')
-    declare_z                           = DeclareLaunchArgument('x', default_value='0.0')
-    declare_yaw                         = DeclareLaunchArgument('x', default_value='0.0')
-    declare_pitch                       = DeclareLaunchArgument('x', default_value='0.0')
-    declare_roll                        = DeclareLaunchArgument('x', default_value='0.0')
+    declare_y                           = DeclareLaunchArgument('y', default_value='0.0')
+    declare_z                           = DeclareLaunchArgument('z', default_value='0.0')
+    declare_yaw                         = DeclareLaunchArgument('yaw', default_value='0.0')
+    declare_pitch                       = DeclareLaunchArgument('pitch', default_value='0.0')
+    declare_roll                        = DeclareLaunchArgument('roll', default_value='0.0')
 
 
     declare_ros2_control_hardware_type = DeclareLaunchArgument(
@@ -90,9 +91,8 @@ def generate_launch_description():
 
     robot_description_content = ParameterValue(Command([
         'xacro', ' ', urdf_model, ' ',
+        'prefix:=', prefix, ' ',
         'ros2_control_hardware_type:=', LaunchConfiguration("ros2_control_hardware_type"), ' ',
-        'joint_commands_topic_name:=', LaunchConfiguration("joint_commands_topic_name"), ' ',
-        'joint_states_topic_name:=', LaunchConfiguration("joint_states_topic_name"), ' ',
         # 'prefix:=', LaunchConfiguration('add_world'), ' ',
         # 'add_world:=',          LaunchConfiguration('add_world'), ' ',
         # 'base_link:=',          LaunchConfiguration('base_link'), ' ',
@@ -129,7 +129,7 @@ def generate_launch_description():
             "--pitch", pitch,
             "--roll", roll,
             "--frame-id", "World",
-            "--child-frame-id", "panda_link0"
+            "--child-frame-id", [prefix, TextSubstitution(text="panda_link0")]
         ],
         parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}],
     )
@@ -142,6 +142,7 @@ def generate_launch_description():
         name='robot_state_publisher',
         output='both',
         parameters=[{
+            # 'frame_prefix': 'panda1',
             'use_sim_time': use_sim_time,
             'robot_description': robot_description_content
         }]
@@ -186,6 +187,7 @@ def generate_launch_description():
         declare_use_sim_time_cmd,
         declare_ros2_control_hardware_type,
         declare_namespace,
+        declare_prefix,
         declare_joint_states_topic_name,
         declare_joint_commands_topic_name,
 

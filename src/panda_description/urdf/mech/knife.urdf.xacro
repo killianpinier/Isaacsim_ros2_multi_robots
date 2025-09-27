@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    
+    <xacro:macro name="knife" params="parent prefix *origin">
+        <link name="${prefix}knife">
+            <inertial>
+                <origin xyz="0 0 0.026" rpy="0 0 0"/>
+                <mass value="0.142"/>
+                <inertia ixx="0.0001339" iyy="0.0001359" izz="0.000022087935" ixy="0" ixz="0.000005" iyz="0"/>
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0.001" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="file://$(find mycobot_description)/meshes/knife/visual/mycobot280_knife.stl"/>
+                </geometry>
+
+                <material name="silver">
+                    <color rgba="0.8 0.8 0.8 1.0"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="0.065 0.025 0.025"/>
+                </geometry>
+                <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+            </collision>
+        </link>
+
+        <joint name="${prefix}${parent}_to_${prefix}knife" type="fixed">
+            <parent link="${prefix}${parent}"/>
+            <child link="${prefix}knife"/>
+            <xacro:insert_block name="origin"/>
+        </joint>
+    </xacro:macro>
+
+</robot>

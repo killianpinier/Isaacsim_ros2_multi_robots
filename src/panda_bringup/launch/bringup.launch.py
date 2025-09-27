@@ -16,14 +16,12 @@ def generate_launch_description():
     pkg_share_moveit_config = get_package_share_directory(package_name_moveit_config)
 
 
-    declare_use_sim_time = DeclareLaunchArgument(
-        "use_sim_time",
-        default_value="true",
-        description="Use simulation clock if true",
-    )
+    declare_use_sim_time    = DeclareLaunchArgument("use_sim_time", default_value="true", description="Use simulation clock if true")
+    declare_prefix          = DeclareLaunchArgument('prefix', default_value='', description='Prefix for robot joints and links')
 
 
-    use_sim_time = LaunchConfiguration("use_sim_time")
+    use_sim_time            = LaunchConfiguration("use_sim_time")
+    prefix                  = LaunchConfiguration("prefix")
 
     move_group = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -31,8 +29,8 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'namespace': "panda2"
-
+            'namespace': "panda1",
+            'prefix': prefix
         }.items(),
     )
 
@@ -45,7 +43,8 @@ def generate_launch_description():
             'jsp_gui': 'false',
             'use_rviz': 'false',
             'use_sim_time': use_sim_time,
-            'namespace': "panda2",
+            'namespace': "panda1",
+            'prefix': prefix
             # 'joint_commands_topic_name': '/panda1/isaac_joint_commands',
             # 'joint_states_topic_name': '/panda1/isaac_joint_states'
 
@@ -58,7 +57,7 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'namespace': "panda2"
+            'namespace': "panda1"
         }.items(),
     )
 
@@ -67,5 +66,6 @@ def generate_launch_description():
 
         move_group,
         robot_state_publisher,
-        load_controllers_cmd
+        load_controllers_cmd,
+        declare_prefix
     ])

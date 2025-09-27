@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    
+    <xacro:macro name="peeler" params="parent prefix *origin">
+        <link name="${prefix}peeler_base">
+            <inertial>
+                <origin xyz="0 0.005 0.0168" rpy="0 0 0"/>
+                <mass value="0.142"/>
+                <inertia ixx="0.000073" iyy="0.000024" izz="0.000077" ixy="0" ixz="0" iyz="0"/>
+            </inertial>
+            <visual>
+                <origin xyz="0 0.005 0.021" rpy="1.5707 0 0"/>
+                <geometry>
+                    <mesh filename="file://$(find panda_description)/meshes/peeler/visual/peeler_base.stl"/>
+                </geometry>
+
+                <material name="silver">
+                    <color rgba="0.8 0.8 0.8 1.0"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="0.03 0.01 0.07"/>
+                </geometry>
+                <origin xyz="0.0 0.0 0.045" rpy="0 0 0"/>
+            </collision>
+        </link>
+
+        <link name="${prefix}peeler_blade">
+            <inertial>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <mass value="0.003"/>
+                <inertia ixx="0.0000001" iyy="0.0000001" izz="0.0000001" ixy="0.000000" ixz="0.000000" iyz="0.000000"/>
+            </inertial>
+            <visual>
+                <!-- <origin xyz="0 0 0.09225" rpy="0 0 0"/> -->
+                <origin xyz="0 0.0005 0" rpy="1.5707 0 0"/>
+                <geometry>
+                    <mesh filename="file://$(find panda_description)/meshes/peeler/visual/blade.stl"/>
+                </geometry>
+
+                <material name="silver">
+                    <color rgba="0.8 0.8 0.8 1.0"/>
+                </material>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="0.0335 0.001 0.006"/>
+                </geometry>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+            </collision>
+        </link>
+
+        <joint name="${prefix}${parent}_to_${prefix}peeler_base" type="fixed">
+            <parent link="${prefix}${parent}"/>
+            <child link="${prefix}peeler_base"/>
+            <xacro:insert_block name="origin"/>
+        </joint>
+
+        <!-- Revolute joint between peeler base and blade -->
+        <joint name="${prefix}blade_joint" type="continuous">
+            <parent link="${prefix}peeler_base"/>
+            <child link="${prefix}peeler_blade"/>
+            <!-- Joint origin: where the blade rotates relative to the base -->
+            <origin xyz="0 0 0.09225" rpy="0 0 0"/>
+            <!-- Rotation axis: this example makes the blade rotate around Y -->
+            <axis xyz="1 0 0"/>
+            <dynamics damping="0.0001" friction="0.0"/>
+        </joint>
+
+    </xacro:macro>
+
+</robot>
