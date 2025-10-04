@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="panda">
+
+    <xacro:arg name="initial_positions_file" default="config/initial_positions.yaml" />
+
+    <xacro:arg name="panda1_prefix" default="panda1_" />
+    <xacro:arg name="panda1_ros2_control_hardware_type" default="isaac" />
+    <xacro:arg name="panda1_eef_type" default="gripper" />
+    <xacro:arg name="panda1_x" default="0.0" />
+    <xacro:arg name="panda1_y" default="0.0" />
+    <xacro:arg name="panda1_z" default="0.0" />
+    <xacro:arg name="panda1_yaw" default="0.0" />
+    <xacro:arg name="panda1_roll" default="0.0" />
+    <xacro:arg name="panda1_pitch" default="0.0" />
+
+    <xacro:arg name="panda2_prefix" default="panda2_" />
+    <xacro:arg name="panda2_ros2_control_hardware_type" default="isaac" />
+    <xacro:arg name="panda2_eef_type" default="gripper" />
+    <xacro:arg name="panda2_x" default="0.0" />
+    <xacro:arg name="panda2_y" default="0.0" />
+    <xacro:arg name="panda2_z" default="0.0" />
+    <xacro:arg name="panda2_yaw" default="0.0" />
+    <xacro:arg name="panda2_roll" default="0.0" />
+    <xacro:arg name="panda2_pitch" default="0.0" />
+
+    <xacro:include filename="$(find panda_description)/urdf/mech/panda_arm.urdf.xacro" />
+
+
+    <link name="World"/>
+
+    <!-- *************** panda1 *************** -->
+    <joint name="World_to_panda1" type="fixed">
+        <parent link="World"/>
+        <child link="panda1_panda_link0"/>
+        <origin xyz="$(arg panda1_x) $(arg panda1_y) $(arg panda1_z)" rpy="$(arg panda1_roll) $(arg panda1_pitch) $(arg panda1_yaw)"/>
+    </joint>
+
+    <xacro:arm prefix="$(arg panda1_prefix)" />
+
+    <xacro:property name="panda1_eef" value="$(arg panda1_eef_type)"/>
+    <xacro:if value="${panda1_eef == 'gripper'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/panda_gripper.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda_full.ros2_control.xacro" />
+
+        <xacro:gripper prefix="$(arg panda1_prefix)" />
+        <xacro:panda_ros2_control_full name="Panda1_FullFakeSystem"
+                                    prefix="$(arg panda1_prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg panda1_ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <xacro:if value="${panda1_eef == 'peeler'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/peeler.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+
+        <xacro:peeler prefix="$(arg panda1_prefix)" parent="panda_link8">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:peeler>
+        <xacro:panda_ros2_control name="Panda1_FakeSystem"
+                                    prefix="$(arg panda1_prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg panda1_ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <xacro:if value="${panda1_eef == 'knife'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/knife.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+
+        <xacro:knife prefix="$(arg panda1_prefix)" />
+        <xacro:panda_ros2_control name="Panda1_FakeSystem"
+                                    prefix="$(arg panda1_prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg panda1_ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    
+
+    <!-- *************** panda2 *************** -->
+
+    <joint name="World_to_panda2" type="fixed">
+        <parent link="World"/>
+        <child link="panda2_panda_link0"/>
+        <origin xyz="$(arg panda2_x) $(arg panda2_y) $(arg panda2_z)" rpy="$(arg panda2_roll) $(arg panda2_pitch) $(arg panda2_yaw)"/>
+    </joint>
+    
+    <xacro:arm prefix="$(arg panda2_prefix)" />
+
+    <xacro:property name="panda2_eef" value="$(arg panda2_eef_type)"/>
+
+    <xacro:if value="${panda2_eef == 'gripper'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/panda_gripper.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda_full.ros2_control.xacro" />
+
+        <xacro:gripper prefix="$(arg panda2_prefix)" />
+        <xacro:panda_ros2_control_full name="Panda2_FullFakeSystem"
+                                    prefix="$(arg panda2_prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg panda2_ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <xacro:if value="${panda2_eef == 'peeler'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/peeler.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+
+        <xacro:peeler prefix="$(arg panda2_prefix)" parent="panda_link8">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:peeler>
+        <xacro:panda_ros2_control name="Panda2_FakeSystem"
+                                    prefix="$(arg panda2_prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg panda2_ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <xacro:if value="${panda2_eef == 'knife'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/knife.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+
+        <xacro:knife prefix="$(arg panda2_prefix)" />
+        <xacro:panda_ros2_control name="Panda2_FakeSystem"
+                                    prefix="$(arg panda2_prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg panda2_ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <!-- <xacro:panda_ros2_control_full name="PandaFullFakeSystem" 
+                                    prefix="$(arg prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/> -->
+
+    <!-- <xacro:panda_ros2_control name="PandaFakeSystem"
+                              prefix="$(arg prefix)"
+                              initial_positions_file="$(arg initial_positions_file)" 
+                              ros2_control_hardware_type="$(arg ros2_control_hardware_type)"
+    /> -->
+
+</robot>

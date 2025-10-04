@@ -7,13 +7,29 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(message_filters REQUIRED)
 
 install (
   DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
+)
+
+# Add executable
+add_executable(joint_state_merger src/joint_state_merger.cpp)
+
+# Link dependencies
+ament_target_dependencies(joint_state_merger
+  rclcpp
+  sensor_msgs
+  message_filters
+)
+
+# Install executable
+install(TARGETS
+  joint_state_merger
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

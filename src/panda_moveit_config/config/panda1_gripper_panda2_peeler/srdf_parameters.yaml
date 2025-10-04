@@ -1,0 +1,6 @@
+srdf_mappings:
+  panda1_prefix: "panda1_"
+  panda1_eef_type: "gripper"
+
+  panda2_prefix: "panda2_"
+  panda2_eef_type: "peeler"

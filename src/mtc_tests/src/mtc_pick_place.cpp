@@ -23,9 +23,9 @@ geometry_msgs::msg::PoseStamped get_cylinder_grasp_pose() {
     // pose.position.x = 0.455;
     // pose.position.y = 0.05;
     // pose.position.z = 0.012;
-    pose.position.x = 0.25;
-    pose.position.y = 0.19;
-    pose.position.z = 0.165;
+    pose.position.x = 0.35;
+    pose.position.y = 0.29;
+    pose.position.z = 0.217;
 
     pose.orientation.w = 0.7071;
     pose.orientation.x = -0.7071;
@@ -44,7 +44,7 @@ class MTCTaskNode : public rclcpp::Node {
     MTCTaskNode(const rclcpp::NodeOptions& options,
                 std::string arm_group_name_ = "panda_arm",
                 std::string gripper_group_name_ = "hand",
-                std::string gripper_frame_ = "panda_hand");
+                std::string gripper_frame_ = "panda1_panda_hand");
     void doTask();
     void setupPlanningScene();
 
@@ -152,13 +152,13 @@ mtc::Task MTCTaskNode::createTask() {
     task.stages()->setName("pick_place_task");
     task.loadRobotModel(shared_from_this());
 
-    auto controller_names = std::vector<std::string>{"panda_arm_controller", "panda_hand_controller"};
+    // auto controller_names = std::vector<std::string>{"/panda1/panda_arm_controller", "/panda1/panda_hand_controller"};
 
     task.setProperty("group", arm_group_name);
     task.setProperty("eef", gripper_group_name);
     task.setProperty("ik_frame", gripper_frame);
-    task.setProperty("trajectory_execution_info",
-        mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
+    // task.setProperty("trajectory_execution_info",
+    //     mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
 
     mtc::Stage* current_state_ptr = nullptr;  // Forward current_state on to grasp pose generator
     auto stage_state_current = std::make_unique<mtc::stages::CurrentState>("current");
@@ -169,6 +169,9 @@ mtc::Task MTCTaskNode::createTask() {
         {"ompl", arm_group_name + "[RRTConnectkConfigDefault]"}
     };
     auto sampling_planner = std::make_shared<mtc::solvers::PipelinePlanner>(this->shared_from_this(), ompl_map_arm);
+    sampling_planner->setMaxVelocityScalingFactor(0.25);
+    sampling_planner->setMaxAccelerationScalingFactor(0.25);
+
     auto interpolation_planner = std::make_shared<mtc::solvers::JointInterpolationPlanner>();
 
     auto cartesian_planner = std::make_shared<mtc::solvers::CartesianPath>();
@@ -179,7 +182,7 @@ mtc::Task MTCTaskNode::createTask() {
     auto stage_open_gripper = std::make_unique<mtc::stages::MoveTo>("open gripper", interpolation_planner);
     stage_open_gripper->setGroup(gripper_group_name);
     stage_open_gripper->setGoal("open");
-    stage_open_gripper->properties().set("trajectory_execution_info", mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
+    // stage_open_gripper->properties().set("trajectory_execution_info", mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
     current_state_ptr = stage_open_gripper.get();
     task.add(std::move(stage_open_gripper));
 
@@ -193,8 +196,7 @@ mtc::Task MTCTaskNode::createTask() {
     stage_move_to_pick->properties().configureInitFrom(mtc::Stage::PARENT);
     task.add(std::move(stage_move_to_pick));
 
-    mtc::Stage* attach_object_stage =
-    nullptr;  // Forward attach_object_stage to place pose generator
+    mtc::Stage* attach_object_stage = nullptr;  // Forward attach_object_stage to place pose generator
 
     geometry_msgs::msg::PoseStamped pose_stamped = get_cylinder_grasp_pose();
 
@@ -209,8 +211,8 @@ mtc::Task MTCTaskNode::createTask() {
             stage->properties().set("marker_ns", "approach_object");
             stage->properties().set("link", gripper_frame);
             stage->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
-            stage->properties().set("trajectory_execution_info",
-                mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
+            // stage->properties().set("trajectory_execution_info",
+            //     mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
             stage->setMinMaxDistance(0.05, 0.15);
 
             // Set gripper forward direction
@@ -294,7 +296,7 @@ mtc::Task MTCTaskNode::createTask() {
             auto stage = std::make_unique<mtc::stages::MoveTo>("close gripper", interpolation_planner);
             stage->setGroup(gripper_group_name);
             stage->setGoal("closed");
-            stage->setTimeout(5.0);
+            // stage->setTimeout(5.0);
             grasp->insert(std::move(stage));
         }
 
@@ -314,6 +316,7 @@ mtc::Task MTCTaskNode::createTask() {
 
         //     // Set upward direction
         //     geometry_msgs::msg::Vector3Stamped vec;
+        //     vec.header.frame_id = "World";
         //     vec.header.frame_id = "World";
         //     vec.vector.z = 1.0;
         //     stage->setDirection(vec);
@@ -341,7 +344,9 @@ mtc::Task MTCTaskNode::createTask() {
             pose.pose.orientation.z = new_quat.z();
 
             stage->setGoal(pose);
-            stage->setTimeout(5.0);
+            stage->setGroup(arm_group_name);
+            stage->setIKFrame(gripper_frame);
+            // stage->setTimeout(5.0);
             grasp->insert(std::move(stage));
         }
 
@@ -353,7 +358,7 @@ mtc::Task MTCTaskNode::createTask() {
     //     stage->properties().set("trajectory_execution_info",
     //                 mtc::TrajectoryExecutionInfo().set__controller_names(controller_names));
     //     stage->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
-    //     stage->setGoal("home");
+    //     stage->setGoal("ready");
     //     task.add(std::move(stage));
     // }
 

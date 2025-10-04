@@ -59,7 +59,7 @@
         </joint>
 
         <!-- Revolute joint between peeler base and blade -->
-        <joint name="${prefix}blade_joint" type="continuous">
+        <joint name="${prefix}blade_joint" type="fixed">
             <parent link="${prefix}peeler_base"/>
             <child link="${prefix}peeler_blade"/>
             <!-- Joint origin: where the blade rotates relative to the base -->

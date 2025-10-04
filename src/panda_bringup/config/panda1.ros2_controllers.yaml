@@ -7,6 +7,7 @@
       type: joint_trajectory_controller/JointTrajectoryController
 
     panda_hand_controller:
+      # type: parallel_gripper_action_controller/GripperActionController
       type: position_controllers/GripperActionController
 
     joint_state_broadcaster:
@@ -33,9 +34,9 @@
 /**/panda_hand_controller:
   ros__parameters:
     joint: panda1_panda_finger_joint1
-    goal_tolerance: 0.016
+    goal_tolerance: 0.02
     max_effort: 5.0
 
-    allow_stalling: true
-    # stall_velocity_threshold: 0.001  # Allow slow motion
-    stall_timeout: 3.0  # Wait longer before stopping
+    allow_stalling: false
+    stall_velocity_threshold: 0.005
+    stall_timeout: 1.0

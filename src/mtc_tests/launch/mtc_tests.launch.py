@@ -17,25 +17,28 @@ def generate_launch_description():
     # Get the package share directory
     pkg_share_moveit_config_temp = FindPackageShare(package=package_name_moveit_config)
 
+    robot_description_xacro_file_path = os.path.join(
+        get_package_share_directory("panda_description"),
+        "urdf",
+        "panda.urdf.xacro"
+    )
+
     # Launch configuration variables
     use_sim_time                = LaunchConfiguration('use_sim_time')
     exe                         = LaunchConfiguration('exe')
 
-    prefix                      = LaunchConfiguration('prefix')
-    namespace                   = LaunchConfiguration('namespace')
-    use_eef                     = LaunchConfiguration('use_eef')
-    eef_type                    = LaunchConfiguration('eef_type')
     # srdf_config_file            = LaunchConfiguration('srdf_config_file')
 
     # Declare the launch arguments
     # declare_robot_name_cmd      = DeclareLaunchArgument(name='robot_name', default_value='mycobot_280', description='Name of the robot to use')
     # declare_prefix_cmd          = DeclareLaunchArgument(name='prefix', default_value='', description='Prefix of the robot to use')
     declare_namespace_cmd       = DeclareLaunchArgument(name='namespace', default_value='', description='Namespace of the robot to use')
+    declare_prefix_cmd          = DeclareLaunchArgument('prefix', default_value='', description='Prefix for robot joints and links')
     declare_use_sim_time_cmd    = DeclareLaunchArgument(name='use_sim_time', default_value='true', description='Use simulation (Gazebo) clock if true')
     declare_exe_cmd             = DeclareLaunchArgument(name='exe', default_value='', description='Name of the executable to run')
-    declare_use_eef_cmd         = DeclareLaunchArgument(name='use_eef', default_value='true', description='Name of the robot to use')
-    declare_eef_type_cmd        = DeclareLaunchArgument(name='eef_type', default_value='adaptive_gripper', description='Use simulation (Gazebo) clock if true')
-    declare_srdf_cfg_file_cmd   = DeclareLaunchArgument(name='srdf_config_file', default_value='mycobot_280_gripper.srdf', description='SRDF config file name')
+    #declare_use_eef_cmd         = DeclareLaunchArgument(name='use_eef', default_value='true', description='Name of the robot to use')
+    declare_eef_type_cmd        = DeclareLaunchArgument(name='eef_type', default_value='gripper', description='')
+    #declare_srdf_cfg_file_cmd   = DeclareLaunchArgument(name='srdf_config_file', default_value='mycobot_280_gripper.srdf', description='SRDF config file name')
 
     declare_ros2_control_hardware_type = DeclareLaunchArgument(
         "ros2_control_hardware_type",
@@ -105,23 +108,43 @@ def generate_launch_description():
         #     .to_moveit_configs()
         # )
 
-        robot_description_xacro_file_path = os.path.join(
-            get_package_share_directory("panda_description"),
-            "urdf",
-            "panda.urdf.xacro"
-        )
+        namespace = LaunchConfiguration('namespace').perform(context)
+
+        pkg_share_moveit_config = FindPackageShare("panda_moveit_config")
+        pkg_share_moveit_config = pkg_share_moveit_config.find("panda_moveit_config")
+
+        config_path = os.path.join(pkg_share_moveit_config, "config", namespace)
+
+        joint_limits_file_path          = os.path.join(config_path, "joint_limits.yaml")
+        kinematics_file_path            = os.path.join(config_path, "kinematics.yaml")
+        moveit_ctrl_file_path           = os.path.join(config_path, "gripper_moveit_controllers.yaml")
+        srdf_file_path                  = os.path.join(config_path, "panda.srdf")
+        pilz_cartesian_limits_file_path = os.path.join(config_path, "pilz_cartesian_limits.yaml")
+
+        print(LaunchConfiguration("eef_type").perform(context))
 
         moveit_config = (
             MoveItConfigsBuilder("panda")
             .robot_description(
                 file_path=robot_description_xacro_file_path,
                 mappings={
+                    "prefix": LaunchConfiguration("prefix"),
+                    "eef_type": LaunchConfiguration("eef_type"),
                     "ros2_control_hardware_type": LaunchConfiguration("ros2_control_hardware_type"),
                 },
             )
-            .robot_description_semantic(file_path="config/panda.srdf")
-            .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
-            .planning_pipelines(pipelines=["ompl", "pilz_industrial_motion_planner"])
+            .robot_description_semantic(
+                file_path="config/panda.srdf.xacro",
+                mappings={
+                    "prefix": LaunchConfiguration("prefix"),
+                    "eef_type": LaunchConfiguration("eef_type"),
+                }
+            )
+            .trajectory_execution(file_path=moveit_ctrl_file_path)
+            .joint_limits(file_path=joint_limits_file_path)
+            .robot_description_kinematics(file_path=kinematics_file_path)
+            .planning_pipelines(pipelines=["ompl", "pilz_industrial_motion_planner"], default_planning_pipeline="ompl")
+            .pilz_cartesian_limits(file_path=pilz_cartesian_limits_file_path)
             .to_moveit_configs()
         )
 
@@ -129,49 +152,50 @@ def generate_launch_description():
         mtc_node = Node(
             package="mtc_tests",
             executable=exe,
-            namespace=namespace,
+            # namespace=namespace,
             output="screen",
             parameters=[
                 moveit_config.to_dict(),
                 {'use_sim_time': use_sim_time},
                 # {'start_state': {'content': initial_positions_file_path}}
             ],
+            # arguments=["--ros-args", "--log-level", "DEBUG"],
         )
 
         return [mtc_node]
     
-    robot_description_xacro_file_path = os.path.join(
-            get_package_share_directory("panda_description"),
-            "urdf",
-            "panda.urdf.xacro"
-        )
+    # robot_description_xacro_file_path = os.path.join(
+    #         get_package_share_directory("panda_description"),
+    #         "urdf",
+    #         "panda.urdf.xacro"
+    #     )
     
-    moveit_config = (
-        MoveItConfigsBuilder("panda")
-        .robot_description(
-            file_path=robot_description_xacro_file_path,
-            mappings={
-                "ros2_control_hardware_type": LaunchConfiguration("ros2_control_hardware_type"),
-            },
-        )
-        .robot_description_semantic(file_path="config/panda.srdf")
-        .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
-        .planning_pipelines(pipelines=["ompl", "pilz_industrial_motion_planner"])
-        .to_moveit_configs()
-    )
+    # moveit_config = (
+    #     MoveItConfigsBuilder("panda")
+    #     .robot_description(
+    #         file_path=robot_description_xacro_file_path,
+    #         mappings={
+    #             "ros2_control_hardware_type": LaunchConfiguration("ros2_control_hardware_type"),
+    #         },
+    #     )
+    #     .robot_description_semantic(file_path="config/panda.srdf")
+    #     .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
+    #     .planning_pipelines(pipelines=["ompl", "pilz_industrial_motion_planner"])
+    #     .to_moveit_configs()
+    # )
 
-    # Create MTC node
-    mtc_node = Node(
-        package="mtc_tests",
-        executable=exe,
-        namespace=namespace,
-        output="screen",
-        parameters=[
-            moveit_config.to_dict(),
-            {'use_sim_time': use_sim_time},
-            # {'start_state': {'content': initial_positions_file_path}}
-        ],
-    )
+    # # Create MTC node
+    # mtc_node = Node(
+    #     package="mtc_tests",
+    #     executable=exe,
+    #     namespace=namespace,
+    #     output="screen",
+    #     parameters=[
+    #         moveit_config.to_dict(),
+    #         {'use_sim_time': use_sim_time},
+    #         # {'start_state': {'content': initial_positions_file_path}}
+    #     ],
+    # )
 
     # Create the launch description
     ld = LaunchDescription()
@@ -180,16 +204,16 @@ def generate_launch_description():
     ld.add_action(declare_ros2_control_hardware_type)
     # ld.add_action(declare_robot_name_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_use_eef_cmd)
+    # ld.add_action(declare_use_eef_cmd)
     ld.add_action(declare_eef_type_cmd)
-    # ld.add_action(declare_prefix_cmd)
+    ld.add_action(declare_prefix_cmd)
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_exe_cmd)
-    ld.add_action(declare_srdf_cfg_file_cmd)
+    # ld.add_action(declare_srdf_cfg_file_cmd)
 
-    ld.add_action(mtc_node)
+    # ld.add_action(mtc_node)
 
     # Add the setup and node creation
-    # ld.add_action(OpaqueFunction(function=configure_setup))
+    ld.add_action(OpaqueFunction(function=configure_setup))
 
     return ld

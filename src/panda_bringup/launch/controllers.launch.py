@@ -16,43 +16,28 @@
 import os
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-from moveit_configs_utils import MoveItConfigsBuilder
-from launch.actions import RegisterEventHandler, TimerAction
-from launch.event_handlers import OnProcessStart
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
     # Declare use_sim_time argument
-    decleare_use_sim_time = DeclareLaunchArgument(
-        "use_sim_time",
-        default_value="true",
-        description="Use simulation clock if true",
-    )
-
-    declare_namespace = DeclareLaunchArgument(
-        "namespace",
-        default_value="",
-        description="The namespace of the robot",
-    )
-
-    declare_ctrl_file_name = DeclareLaunchArgument(
-        "controllers_file_name",
-        default_value="ros2_controllers.yaml",
-        description="The filename for the robot's controller",
-    )
+    decleare_use_sim_time   = DeclareLaunchArgument("use_sim_time", default_value="true", description="Use simulation clock if true")
+    declare_namespace       = DeclareLaunchArgument("namespace", default_value="", description="The namespace of the robot")
+    declare_ctrl_file_name  = DeclareLaunchArgument("controllers_file_name", default_value="ros2_controllers.yaml", description="The filename for the robot's controller")
+    declare_use_hand_ctrl   = DeclareLaunchArgument("use_hand_ctrl", default_value="false")
 
     use_sim_time                = LaunchConfiguration("use_sim_time")
     namespace                   = LaunchConfiguration('namespace')
     controllers_file_name       = LaunchConfiguration('controllers_file_name')
 
-    ros2_controllers_path = os.path.join(
+    ros2_controllers_path = PathJoinSubstitution([
         get_package_share_directory("panda_bringup"),
         "config",
         controllers_file_name,
-    )
+    ])
 
     ros2_control_node = Node(
         package="controller_manager",
@@ -62,9 +47,6 @@ def generate_launch_description():
             ros2_controllers_path,
             {"use_sim_time": use_sim_time},
         ],
-        # remappings=[
-        #     ("/controller_manager/robot_description", "/panda1/robot_description"),
-        # ],
         output="screen",
     )
 
@@ -74,8 +56,6 @@ def generate_launch_description():
         namespace=namespace,
         arguments=[
             "joint_state_broadcaster",
-            # "--controller-manager",
-            # "/controller_manager",
         ],
     )
 
@@ -84,38 +64,50 @@ def generate_launch_description():
         namespace=namespace,
         executable="spawner",
         arguments=["panda_arm_controller"],
-        # arguments=["panda_arm_controller", "-c", "/controller_manager"],
     )
 
     panda_hand_controller_spawner = Node(
         package="controller_manager",
         namespace=namespace,
         executable="spawner",
-        arguments=["panda_hand_controller"],
-        # arguments=["panda_hand_controller", "-c", "/controller_manager"],
+        arguments=[
+            "panda_hand_controller", 
+        ],
+        condition=IfCondition(LaunchConfiguration("use_hand_ctrl"))
     )
 
-    delayed_spawners = RegisterEventHandler(
-        OnProcessStart(
-            target_action=ros2_control_node,
-            on_start=[
-                joint_state_broadcaster_spawner,
-                panda_arm_controller_spawner,
-                panda_hand_controller_spawner,
-            ],
-        )
+    joint_states_topic_relay = Node(
+        package="topic_tools",
+        namespace=namespace,
+        executable="relay",
+        arguments=[
+            [TextSubstitution(text="/"), namespace, TextSubstitution(text="/joint_states")], "/joint_states" 
+        ],
     )
+
+    # delayed_spawners = RegisterEventHandler(
+    #     OnProcessStart(
+    #         target_action=ros2_control_node,
+    #         on_start=[
+    #             joint_state_broadcaster_spawner,
+    #             panda_arm_controller_spawner,
+    #             panda_hand_controller_spawner,
+    #         ],
+    #     )
+    # )
 
     return LaunchDescription(
         [
             decleare_use_sim_time,
+            declare_use_hand_ctrl,
             declare_namespace,
             declare_ctrl_file_name,
-            # ros2_control_node,
-            # joint_state_broadcaster_spawner,
-            # panda_arm_controller_spawner,
-            # panda_hand_controller_spawner,
+
+            joint_states_topic_relay,
             ros2_control_node,
-            delayed_spawners
+            # delayed_spawners
+            joint_state_broadcaster_spawner,
+            panda_arm_controller_spawner,
+            panda_hand_controller_spawner,
         ]
     )

@@ -1,0 +1,30 @@
+urdf_mappings:
+  panda1_prefix: "panda1_"
+  panda1_ros2_control_hardware_type: "isaac"
+  panda1_eef_type: "gripper"
+  panda1_x: 0.0
+  panda1_y: 0.0
+  panda1_z: 0.0
+  panda1_yaw: 0.0
+  panda1_pitch: 0.0
+  panda1_roll: 0.0
+
+  panda2_prefix: "panda2_"
+  panda2_ros2_control_hardware_type: "isaac"
+  panda2_eef_type: "peeler"
+  panda2_x: 0.0
+  panda2_y: 0.8
+  panda2_z: 0.0
+  panda2_yaw: 0.0
+  panda2_pitch: 0.0
+  panda2_roll: 0.0
+
+panda1_single_urdf_mappings:
+  prefix: "panda1_"
+  ros2_control_hardware_type: "isaac"
+  eef_type: "gripper"
+
+panda2_single_urdf_mappings:
+  prefix: "panda2_"
+  ros2_control_hardware_type: "isaac"
+  eef_type: "peeler"

@@ -18,10 +18,16 @@ def generate_launch_description():
 
     declare_use_sim_time    = DeclareLaunchArgument("use_sim_time", default_value="true", description="Use simulation clock if true")
     declare_prefix          = DeclareLaunchArgument('prefix', default_value='', description='Prefix for robot joints and links')
-
+    declare_namespace       = DeclareLaunchArgument('namespace', default_value='', description='Namespace to use for the robot')
+    declare_ctrl_file_name  = DeclareLaunchArgument("controllers_file_name", default_value="ros2_controllers.yaml", description="The filename for the robot's controller")
+    declare_eef_type        = DeclareLaunchArgument('eef_type', default_value='gripper', description='Type of the end-effector')
+    declare_use_rviz        = DeclareLaunchArgument('use_rviz', default_value='false', description='Type of the end-effector')
 
     use_sim_time            = LaunchConfiguration("use_sim_time")
     prefix                  = LaunchConfiguration("prefix")
+    namespace               = LaunchConfiguration("namespace")
+    ctrl_file_name          = LaunchConfiguration("ctrl_file_name")
+    eef_type                = LaunchConfiguration('eef_type')
 
     move_group = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -29,11 +35,12 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'namespace': "panda1",
-            'prefix': prefix
+            # 'namespace': namespace,
+            'prefix': prefix,
+            'eef_type': eef_type,
+            'use_rviz': LaunchConfiguration('use_rviz')
         }.items(),
     )
-
 
     robot_state_publisher = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -43,8 +50,9 @@ def generate_launch_description():
             'jsp_gui': 'false',
             'use_rviz': 'false',
             'use_sim_time': use_sim_time,
-            'namespace': "panda1",
-            'prefix': prefix
+            # 'namespace': namespace,
+            'prefix': prefix,
+            'eef_type': eef_type
             # 'joint_commands_topic_name': '/panda1/isaac_joint_commands',
             # 'joint_states_topic_name': '/panda1/isaac_joint_states'
 
@@ -57,15 +65,20 @@ def generate_launch_description():
         ]),
         launch_arguments={
             'use_sim_time': use_sim_time,
-            'namespace': "panda1"
+            'namespace': namespace,
+            "controllers_file_name": ctrl_file_name
         }.items(),
     )
 
     return LaunchDescription([
         declare_use_sim_time,
+        declare_namespace,
+        declare_prefix,
+        declare_ctrl_file_name,
+        declare_eef_type,
+        declare_use_rviz,
 
         move_group,
         robot_state_publisher,
         load_controllers_cmd,
-        declare_prefix
     ])

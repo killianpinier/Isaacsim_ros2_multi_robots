@@ -4,23 +4,58 @@
     <xacro:arg name="prefix" default="" />
     <xacro:arg name="initial_positions_file" default="config/initial_positions.yaml" />
     <xacro:arg name="ros2_control_hardware_type" default="mock_components" />
+    <xacro:arg name="eef_type" default="gripper" />
 
     <xacro:include filename="$(find panda_description)/urdf/mech/panda_arm.urdf.xacro" />
-    <xacro:include filename="$(find panda_description)/urdf/mech/panda_gripper.urdf.xacro" />
-    <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
-    <xacro:include filename="$(find panda_description)/urdf/control/panda_hand.ros2_control.xacro" />
+
+    <xacro:include filename="$(find panda_description)/urdf/control/panda_full.ros2_control.xacro" />
 
     <xacro:arm prefix="$(arg prefix)" />
-    <xacro:gripper prefix="$(arg prefix)" />
 
-    <xacro:panda_ros2_control name="PandaFakeSystem"
+    <xacro:property name="eef" value="$(arg eef_type)"/>
+
+    <xacro:if value="${eef == 'gripper'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/panda_gripper.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda_full.ros2_control.xacro" />
+
+        <xacro:gripper prefix="$(arg prefix)" />
+
+        <xacro:panda_ros2_control_full name="PandaFullFakeSystem" 
+                                prefix="$(arg prefix)"
+                                initial_positions_file="$(arg initial_positions_file)" 
+                                ros2_control_hardware_type="$(arg ros2_control_hardware_type)" />
+    </xacro:if>
+
+    <xacro:if value="${eef == 'peeler'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/peeler.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+
+        <xacro:peeler prefix="$(arg prefix)" parent="panda_link8">
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </xacro:peeler>
+
+        <xacro:panda_ros2_control name="PandaFakeSystem"
+                                    prefix="$(arg prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <xacro:if value="${eef == 'knife'}">
+        <xacro:include filename="$(find panda_description)/urdf/mech/knife.urdf.xacro" />
+        <xacro:include filename="$(find panda_description)/urdf/control/panda.ros2_control.xacro" />
+
+        <xacro:knife prefix="$(arg prefix)" />
+
+        <xacro:panda_ros2_control name="PandaFakeSystem"
+                                    prefix="$(arg prefix)"
+                                    initial_positions_file="$(arg initial_positions_file)" 
+                                    ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
+    </xacro:if>
+
+    <!-- <xacro:panda_ros2_control name="PandaFakeSystem"
                               prefix="$(arg prefix)"
                               initial_positions_file="$(arg initial_positions_file)" 
                               ros2_control_hardware_type="$(arg ros2_control_hardware_type)"
-    />
-    <xacro:panda_hand_ros2_control name="PandaHandFakeSystem"
-                                   prefix="$(arg prefix)"
-                                   ros2_control_hardware_type="$(arg ros2_control_hardware_type)"
-    />
+    /> -->
 
 </robot>

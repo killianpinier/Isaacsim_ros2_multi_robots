@@ -4,29 +4,34 @@ trajectory_execution:
   allowed_goal_duration_margin: 0.5
   allowed_start_tolerance: 0.01
 
-moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
+controller_service_call_timeout: 10.0
 
-moveit_simple_controller_manager:
-  controller_names:
-    - panda_arm_controller
-    - panda_hand_controller
+# moveit_controller_manager: moveit_ros_control_interface/Ros2ControlManager
+moveit_controller_manager: moveit_ros_control_interface/Ros2ControlMultiManager
+# moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControllerManager
 
-  panda_arm_controller:
-    action_ns: follow_joint_trajectory
-    type: FollowJointTrajectory
-    default: true
-    joints:
-      - panda1_panda_joint1
-      - panda1_panda_joint2
-      - panda1_panda_joint3
-      - panda1_panda_joint4
-      - panda1_panda_joint5
-      - panda1_panda_joint6
-      - panda1_panda_joint7
+# # moveit_ros_control_interface:
+# moveit_simple_controller_manager:
+#   controller_names:
+#     - panda_arm_controller
+#     - panda_hand_controller
 
-  panda_hand_controller:
-    action_ns: gripper_cmd
-    type: GripperCommand
-    default: true
-    joints:
-      - panda1_panda_finger_joint1
+#   panda_arm_controller:
+#     action_ns: follow_joint_trajectory
+#     type: FollowJointTrajectory
+#     default: true
+#     joints:
+#       - panda1_panda_joint1
+#       - panda1_panda_joint2
+#       - panda1_panda_joint3
+#       - panda1_panda_joint4
+#       - panda1_panda_joint5
+#       - panda1_panda_joint6
+#       - panda1_panda_joint7
+
+#   panda_hand_controller:
+#     action_ns: gripper_cmd
+#     type: ParallelGripperCommand
+#     default: true
+#     joints:
+#       - panda1_panda_finger_joint1
